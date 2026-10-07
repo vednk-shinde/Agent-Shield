@@ -1,0 +1,53 @@
+# Default tool-call policy. Anything not listed here is denied.
+# Override with POLICY_PATH=/path/to/policy.yaml
+default: deny
+
+tools:
+  read_file:
+    args:
+      path:
+        required: true
+        type: string
+        deny_traversal: true
+        path_prefixes: ["/workspace"]
+        max_length: 512
+
+  http_get:
+    args:
+      url:
+        required: true
+        type: string
+        schemes: ["https"]
+        block_private_ips: true
+        allowed_hosts: ["api.github.com", "*.wikipedia.org", "httpbin.org"]
+        max_length: 2048
+
+  run_sql:
+    args:
+      query:
+        required: true
+        type: string
+        max_length: 4000
+        # Read-only: a single SELECT, no stacked statements or destructive keywords.
+        allow_pattern: "(?is)\\s*select\\b[^;]*;?\\s*"
+        deny_patterns:
+          - "(?i)\\b(drop|truncate|alter|grant|revoke|insert|update|delete|attach|pragma)\\b"
+          - "--"
+          - "/\\*"
+
+  send_email:
+    require_approval: true
+    args:
+      to: {required: true, type: string, allow_pattern: "[^@\\s]+@(example\\.com|company\\.com)"}
+      subject: {required: true, type: string, max_length: 200}
+      body: {required: true, type: string, max_length: 10000}
+
+  send_payment:
+    require_approval_above: {arg: amount, value: 100}
+    args:
+      to_account: {required: true, type: string, allow_pattern: "[A-Z0-9]{8,34}"}
+      amount: {required: true, type: number, min: 0.01, max: 1000}
+      currency: {required: true, type: string, enum: ["USD", "EUR", "GBP", "INR"]}
+
+  run_command:
+    allow: false   # arbitrary shell access is never granted to an agent

@@ -1,0 +1,25 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Never commit secrets or local config
+.env
+.env.*
+*.pem
+*.key
+
+# Local audit logs / editor files
+audit-data/
+*.log
+.idea/
+.vscode/
+.DS_Store

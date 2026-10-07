@@ -1,0 +1,28 @@
+services:
+  agent-shield:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      AUDIT_LOG_PATH: /data/audit.jsonl
+      # API_KEY: change-me      # uncomment to require an X-API-Key header on every /v1 call
+    volumes:
+      - audit-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Replays a set of realistic attacks against the gateway, prints a PASS/FAIL table and exits.
+  demo:
+    build: .
+    command: ["python", "-m", "agent_shield.demo"]
+    environment:
+      AGENT_SHIELD_URL: http://agent-shield:8000
+    depends_on:
+      agent-shield:
+        condition: service_healthy
+
+volumes:
+  audit-data:
